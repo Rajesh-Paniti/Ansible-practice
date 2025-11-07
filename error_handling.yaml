@@ -1,0 +1,26 @@
+# Handling errors in ansible playbooks using ignore_errors command
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: update packages
+      ansible.builtin.command: apt update -y
+      ignore_errors: yes
+    - name: Check if openssh and openssl packages are up to date
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - openssh-server
+        - openssl
+      ignore_errors: yes
+    - name: Verify if docker is installed
+      ansible.builtin.command: docker --version
+      register: output
+      ignore_errors: yes
+    - name: Install Docker
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+      when:
+        output.rc != 0
